@@ -12,7 +12,7 @@ info:
     
     ## Base URL
     - Development: `http://localhost:3000`
-    - Production: `https://your-render-app.onrender.com`
+    - Production: `https://jennies4life-server.onrender.com`
   version: 1.0.0
   contact:
     name: Jennies4life Support
@@ -21,7 +21,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://your-render-app.onrender.com
+  - url: https://jennies4life-server.onrender.com
     description: Production server
 
 paths:

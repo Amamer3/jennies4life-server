@@ -99,7 +99,7 @@ The API documentation is available in OpenAPI 3.0 format in `openapi.yaml`. You 
 
 ### Base URLs
 - Development: `http://localhost:3000`
-- Production: `https://your-render-app.onrender.com`
+- Production: `https://jennies4life-server.onrender.com`
 
 ## 🔄 API Endpoints
 
