@@ -1,0 +1,750 @@
+openapi: 3.0.3
+info:
+  title: Jennies4life API
+  description: |
+    Backend API for Jennies4life affiliate marketing website.
+    
+    ## Authentication
+    Admin endpoints require Firebase ID token in Authorization header:
+    ```
+    Authorization: Bearer <firebase_id_token>
+    ```
+    
+    ## Base URL
+    - Development: `http://localhost:3000`
+    - Production: `https://your-render-app.onrender.com`
+  version: 1.0.0
+  contact:
+    name: Jennies4life Support
+    email: admin@jennies4life.com
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://your-render-app.onrender.com
+    description: Production server
+
+paths:
+  /:
+    get:
+      summary: API Root
+      description: Welcome endpoint with API information
+      tags:
+        - General
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WelcomeResponse'
+
+  /api/health:
+    get:
+      summary: Health Check
+      description: Check API health status
+      tags:
+        - General
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/products:
+    get:
+      summary: Get Published Products
+      description: Retrieve all published products (public endpoint)
+      tags:
+        - Products (Public)
+      responses:
+        '200':
+          description: List of published products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Create Product
+      description: Create a new product (admin only)
+      tags:
+        - Products (Admin)
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/products/{slug}:
+    get:
+      summary: Get Product by Slug
+      description: Retrieve a single published product by slug (public endpoint)
+      tags:
+        - Products (Public)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Product slug
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/products/{id}:
+    put:
+      summary: Update Product
+      description: Update an existing product (admin only)
+      tags:
+        - Products (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Product ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete Product
+      description: Delete a product (admin only)
+      tags:
+        - Products (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Product ID
+      responses:
+        '200':
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/posts:
+    get:
+      summary: Get Published Posts
+      description: Retrieve all published blog posts (public endpoint)
+      tags:
+        - Posts (Public)
+      responses:
+        '200':
+          description: List of published blog posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Create Blog Post
+      description: Create a new blog post (admin only)
+      tags:
+        - Posts (Admin)
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+      responses:
+        '201':
+          description: Blog post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/posts/{slug}:
+    get:
+      summary: Get Post by Slug
+      description: Retrieve a single published blog post by slug (public endpoint)
+      tags:
+        - Posts (Public)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Post slug
+      responses:
+        '200':
+          description: Blog post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/posts/{id}:
+    put:
+      summary: Update Blog Post
+      description: Update an existing blog post (admin only)
+      tags:
+        - Posts (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Post ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
+      responses:
+        '200':
+          description: Blog post updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete Blog Post
+      description: Delete a blog post (admin only)
+      tags:
+        - Posts (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Post ID
+      responses:
+        '200':
+          description: Blog post deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    FirebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID token
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Product ID
+        name:
+          type: string
+          description: Product name
+        slug:
+          type: string
+          description: URL-friendly slug
+        image:
+          type: string
+          format: uri
+          description: Product image URL
+        description:
+          type: string
+          description: Product description
+        affiliateLink:
+          type: string
+          format: uri
+          description: Affiliate link URL
+        category:
+          type: string
+          description: Product category
+        status:
+          type: string
+          enum: [draft, published]
+          description: Product status
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      example:
+        id: "abc123"
+        name: "Amazing Product"
+        slug: "amazing-product"
+        image: "https://example.com/image.jpg"
+        description: "This is an amazing product that you'll love!"
+        affiliateLink: "https://affiliate.com/product/123"
+        category: "Electronics"
+        status: "published"
+        createdAt: "2024-01-15T10:30:00Z"
+        updatedAt: "2024-01-15T10:30:00Z"
+
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Post ID
+        title:
+          type: string
+          description: Post title
+        slug:
+          type: string
+          description: URL-friendly slug
+        content:
+          type: string
+          description: Post content (HTML/Markdown)
+        coverImage:
+          type: string
+          format: uri
+          description: Cover image URL
+        tags:
+          type: array
+          items:
+            type: string
+          description: Post tags
+        status:
+          type: string
+          enum: [draft, published]
+          description: Post status
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      example:
+        id: "def456"
+        title: "How to Choose the Best Products"
+        slug: "how-to-choose-best-products"
+        content: "<p>Here's a comprehensive guide...</p>"
+        coverImage: "https://example.com/cover.jpg"
+        tags: ["guide", "products", "tips"]
+        status: "published"
+        createdAt: "2024-01-15T10:30:00Z"
+        updatedAt: "2024-01-15T10:30:00Z"
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - image
+        - description
+        - affiliateLink
+        - category
+      properties:
+        name:
+          type: string
+          description: Product name
+        slug:
+          type: string
+          description: Custom slug (optional, auto-generated if not provided)
+        image:
+          type: string
+          format: uri
+          description: Product image URL
+        description:
+          type: string
+          description: Product description
+        affiliateLink:
+          type: string
+          format: uri
+          description: Affiliate link URL
+        category:
+          type: string
+          description: Product category
+        status:
+          type: string
+          enum: [draft, published]
+          default: draft
+          description: Product status
+      example:
+        name: "Amazing Product"
+        image: "https://example.com/image.jpg"
+        description: "This is an amazing product that you'll love!"
+        affiliateLink: "https://affiliate.com/product/123"
+        category: "Electronics"
+        status: "published"
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Product name
+        slug:
+          type: string
+          description: URL-friendly slug
+        image:
+          type: string
+          format: uri
+          description: Product image URL
+        description:
+          type: string
+          description: Product description
+        affiliateLink:
+          type: string
+          format: uri
+          description: Affiliate link URL
+        category:
+          type: string
+          description: Product category
+        status:
+          type: string
+          enum: [draft, published]
+          description: Product status
+      example:
+        name: "Updated Product Name"
+        status: "published"
+
+    CreatePostRequest:
+      type: object
+      required:
+        - title
+        - content
+        - coverImage
+      properties:
+        title:
+          type: string
+          description: Post title
+        slug:
+          type: string
+          description: Custom slug (optional, auto-generated if not provided)
+        content:
+          type: string
+          description: Post content (HTML/Markdown)
+        coverImage:
+          type: string
+          format: uri
+          description: Cover image URL
+        tags:
+          type: array
+          items:
+            type: string
+          description: Post tags
+        status:
+          type: string
+          enum: [draft, published]
+          default: draft
+          description: Post status
+      example:
+        title: "How to Choose the Best Products"
+        content: "<p>Here's a comprehensive guide...</p>"
+        coverImage: "https://example.com/cover.jpg"
+        tags: ["guide", "products", "tips"]
+        status: "published"
+
+    UpdatePostRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Post title
+        slug:
+          type: string
+          description: URL-friendly slug
+        content:
+          type: string
+          description: Post content (HTML/Markdown)
+        coverImage:
+          type: string
+          format: uri
+          description: Cover image URL
+        tags:
+          type: array
+          items:
+            type: string
+          description: Post tags
+        status:
+          type: string
+          enum: [draft, published]
+          description: Post status
+      example:
+        title: "Updated Post Title"
+        status: "published"
+
+    ProductResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Product'
+        message:
+          type: string
+          example: "Product created successfully"
+
+    ProductListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+
+    PostResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/BlogPost'
+        message:
+          type: string
+          example: "Blog post created successfully"
+
+    PostListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlogPost'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Validation Error"
+        message:
+          type: string
+          example: "Missing required fields: name, description"
+
+    WelcomeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Welcome to Jennies4life API"
+        version:
+          type: string
+          example: "1.0.0"
+        documentation:
+          type: string
+          example: "/api/docs"
+        endpoints:
+          type: object
+          properties:
+            products:
+              type: string
+              example: "/api/products"
+            posts:
+              type: string
+              example: "/api/posts"
+            health:
+              type: string
+              example: "/api/health"
+
+    HealthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Jennies4life API is running"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+tags:
+  - name: General
+    description: General API endpoints
+  - name: Products (Public)
+    description: Public product endpoints (no authentication required)
+  - name: Products (Admin)
+    description: Admin product endpoints (authentication required)
+  - name: Posts (Public)
+    description: Public blog post endpoints (no authentication required)
+  - name: Posts (Admin)
+    description: Admin blog post endpoints (authentication required)
