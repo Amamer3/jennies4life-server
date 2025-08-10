@@ -53,6 +53,136 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
 
+  /api/auth/login:
+    post:
+      summary: Admin Login
+      description: Authenticate admin user with email and password
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/refresh:
+    post:
+      summary: Refresh Token
+      description: Refresh authentication token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refresh initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/verify:
+    get:
+      summary: Verify Authentication
+      description: Verify current authentication status
+      tags:
+        - Authentication
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: Authentication verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/logout:
+    post:
+      summary: Admin Logout
+      description: Logout admin user
+      tags:
+        - Authentication
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/profile:
+    get:
+      summary: Get Admin Profile
+      description: Get current admin user profile
+      tags:
+        - Authentication
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: Admin profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/products:
     get:
       summary: Get Published Products
@@ -737,9 +867,141 @@ components:
           format: date-time
           example: "2024-01-15T10:30:00Z"
 
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Admin email address
+        password:
+          type: string
+          description: Admin password
+      example:
+        email: "admin@jennies4life.com"
+        password: "securepassword123"
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Admin credentials verified. Please authenticate with Firebase client SDK."
+        data:
+          type: object
+          properties:
+            email:
+              type: string
+              example: "admin@jennies4life.com"
+            requiresFirebaseAuth:
+              type: boolean
+              example: true
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Firebase refresh token
+      example:
+        refreshToken: "firebase_refresh_token_here"
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Token refresh initiated. Please use Firebase client SDK to refresh tokens."
+        data:
+          type: object
+          properties:
+            requiresFirebaseRefresh:
+              type: boolean
+              example: true
+
+    VerifyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Authentication verified"
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                uid:
+                  type: string
+                email:
+                  type: string
+            authenticated:
+              type: boolean
+              example: true
+
+    LogoutResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Logout successful. Please clear Firebase authentication on client side."
+        data:
+          type: object
+          properties:
+            loggedOut:
+              type: boolean
+              example: true
+
+    ProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Admin profile retrieved"
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                uid:
+                  type: string
+                email:
+                  type: string
+            role:
+              type: string
+              example: "admin"
+            permissions:
+              type: array
+              items:
+                type: string
+              example: ["read", "write", "delete"]
+
 tags:
   - name: General
     description: General API endpoints
+  - name: Authentication
+    description: Admin authentication endpoints
   - name: Products (Public)
     description: Public product endpoints (no authentication required)
   - name: Products (Admin)

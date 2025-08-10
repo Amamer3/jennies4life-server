@@ -63,6 +63,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     documentation: '/api/docs',
     endpoints: {
+      auth: '/api/auth',
       products: '/api/products',
       posts: '/api/posts',
       health: '/api/health'

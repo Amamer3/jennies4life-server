@@ -3,10 +3,12 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import productsRoutes from './products';
 import postsRoutes from './posts';
+import authRoutes from './auth';
 
 const router = Router();
 
 // API routes
+router.use('/auth', authRoutes);
 router.use('/products', productsRoutes);
 router.use('/posts', postsRoutes);
 
