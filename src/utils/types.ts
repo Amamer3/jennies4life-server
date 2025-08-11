@@ -9,6 +9,8 @@ export interface Product {
   affiliateLink: string;
   category: string;
   status: 'draft' | 'published';
+  clickCount?: number;
+  lastClickedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -61,6 +63,16 @@ export interface UpdateBlogPostRequest {
   coverImage?: string;
   tags?: string[];
   status?: 'draft' | 'published';
+}
+
+export interface ClickEvent {
+  id?: string;
+  productId: string;
+  productSlug: string;
+  userIP?: string;
+  userAgent?: string;
+  referrer?: string;
+  timestamp: Timestamp;
 }
 
 export interface ApiResponse<T = any> {

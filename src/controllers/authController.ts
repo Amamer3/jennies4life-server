@@ -285,10 +285,11 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 /**
  * Admin logout endpoint
  */
-export const logout = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     // Note: In a real implementation, you might invalidate tokens
     // or maintain a blacklist of revoked tokens
+    // This is now a public endpoint that always succeeds
     res.status(200).json({
       success: true,
       message: 'Logout successful. Please clear Firebase authentication on client side.',

@@ -130,6 +130,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response): P
       ...productData,
       slug,
       status: productData.status || 'draft',
+      clickCount: 0,
       createdAt: now,
       updatedAt: now
     };

@@ -5,6 +5,7 @@ import productsRoutes from './products';
 import postsRoutes from './posts';
 import authRoutes from './auth';
 import dashboardRoutes from './dashboard';
+import redirectRoutes from './redirect';
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.use('/auth', authRoutes);
 router.use('/products', productsRoutes);
 router.use('/posts', postsRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/redirect', redirectRoutes);
 
 // API Documentation endpoint with Scalar
 router.get('/docs', (req, res) => {

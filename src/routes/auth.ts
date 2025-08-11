@@ -28,9 +28,9 @@ router.get('/verify', authMiddleware, verify);
 /**
  * @route POST /api/auth/logout
  * @desc Admin logout
- * @access Private (Admin)
+ * @access Public
  */
-router.post('/logout', authMiddleware, logout);
+router.post('/logout', logout);
 
 /**
  * @route GET /api/auth/profile
