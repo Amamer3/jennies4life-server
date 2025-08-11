@@ -78,8 +78,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Forbidden - Admin access required
+          description: Forbidden - Admin privileges required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Admin user not found
           content:
             application/json:
               schema:
@@ -511,6 +523,90 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/dashboard/stats:
+    get:
+      summary: Get Dashboard Statistics
+      description: Retrieve dashboard statistics including product and post counts (admin only)
+      tags:
+        - Dashboard (Admin)
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStatsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/dashboard/products:
+    get:
+      summary: Get All Products (Admin)
+      description: Retrieve all products including drafts (admin only)
+      tags:
+        - Dashboard (Admin)
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: List of all products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/dashboard/posts:
+    get:
+      summary: Get All Posts (Admin)
+      description: Retrieve all posts including drafts (admin only)
+      tags:
+        - Dashboard (Admin)
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: List of all posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     FirebaseAuth:
@@ -892,16 +988,29 @@ components:
           example: true
         message:
           type: string
-          example: "Admin credentials verified. Please authenticate with Firebase client SDK."
+          example: "Admin login successful"
         data:
           type: object
           properties:
-            email:
+            customToken:
               type: string
-              example: "admin@jennies4life.com"
-            requiresFirebaseAuth:
-              type: boolean
-              example: true
+              description: Firebase custom token for authentication
+              example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+            user:
+              type: object
+              properties:
+                uid:
+                  type: string
+                  example: "UW1cv09lKUbJn819wprrKeYHYQW2"
+                email:
+                  type: string
+                  example: "admin@jennies4life.com"
+                displayName:
+                  type: string
+                  example: "Main Admin"
+                role:
+                  type: string
+                  example: "admin"
 
     RefreshTokenRequest:
       type: object
@@ -922,13 +1031,26 @@ components:
           example: true
         message:
           type: string
-          example: "Token refresh initiated. Please use Firebase client SDK to refresh tokens."
+          example: "Token refreshed successfully"
         data:
           type: object
           properties:
-            requiresFirebaseRefresh:
-              type: boolean
-              example: true
+            customToken:
+              type: string
+              description: New Firebase custom token
+              example: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+            user:
+              type: object
+              properties:
+                uid:
+                  type: string
+                  example: "UW1cv09lKUbJn819wprrKeYHYQW2"
+                email:
+                  type: string
+                  example: "admin@jennies4life.com"
+                role:
+                  type: string
+                  example: "admin"
 
     VerifyResponse:
       type: object
@@ -997,6 +1119,50 @@ components:
                 type: string
               example: ["read", "write", "delete"]
 
+    DashboardStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            totalProducts:
+              type: integer
+              description: Total number of products
+              example: 25
+            publishedProducts:
+              type: integer
+              description: Number of published products
+              example: 20
+            draftProducts:
+              type: integer
+              description: Number of draft products
+              example: 5
+            totalPosts:
+              type: integer
+              description: Total number of blog posts
+              example: 15
+            publishedPosts:
+              type: integer
+              description: Number of published blog posts
+              example: 12
+            draftPosts:
+              type: integer
+              description: Number of draft blog posts
+              example: 3
+            recentProducts:
+              type: array
+              description: Last 5 created products
+              items:
+                $ref: '#/components/schemas/Product'
+            recentPosts:
+              type: array
+              description: Last 5 created blog posts
+              items:
+                $ref: '#/components/schemas/BlogPost'
+
 tags:
   - name: General
     description: General API endpoints
@@ -1010,3 +1176,5 @@ tags:
     description: Public blog post endpoints (no authentication required)
   - name: Posts (Admin)
     description: Admin blog post endpoints (authentication required)
+  - name: Dashboard (Admin)
+    description: Admin dashboard endpoints (authentication required)

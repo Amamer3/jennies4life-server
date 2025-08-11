@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import path from 'path';
 import routes from './routes';
 
 // Load environment variables
@@ -19,27 +20,45 @@ app.use(helmet({
       styleSrc: ["'self'", "https://cdn.jsdelivr.net", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net"],
       connectSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "https://cdn.jsdelivr.net"]
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://fonts.scalar.com", "data:"]
     }
   }
 }));
 
 // CORS configuration
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://localhost:3001', 
+  'http://localhost:5173',
+  'http://localhost:8080',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173'
+];
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl requests, or Postman)
     if (!origin) return callback(null, true);
+    
+    // In development, be more permissive
+    if (process.env.NODE_ENV === 'development') {
+      // Allow localhost and 127.0.0.1 with any port
+      if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/)) {
+        return callback(null, true);
+      }
+    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`CORS: Origin '${origin}' not allowed. Allowed origins:`, allowedOrigins);
+      callback(new Error(`Origin '${origin}' not allowed by CORS`));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 }));
 
 // Body parsing middleware
@@ -50,6 +69,11 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
+});
+
+// Serve test HTML file
+app.get('/test-frontend.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../test-frontend.html'));
 });
 
 // API routes
@@ -66,6 +90,7 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       products: '/api/products',
       posts: '/api/posts',
+      dashboard: '/api/dashboard',
       health: '/api/health'
     }
   });
@@ -85,11 +110,12 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   console.error('Global error handler:', err);
   
   // CORS error
-  if (err.message === 'Not allowed by CORS') {
+  if (err.message.includes('not allowed by CORS')) {
     return res.status(403).json({
       success: false,
       error: 'CORS Error',
-      message: 'Origin not allowed'
+      message: err.message,
+      hint: 'Make sure your frontend origin is included in ALLOWED_ORIGINS environment variable'
     });
   }
   

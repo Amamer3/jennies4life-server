@@ -47,21 +47,68 @@ export const authMiddleware = async (
       return;
     }
 
-    // Verify the Firebase ID token
-    const decodedToken = await auth.verifyIdToken(token);
+    let decodedToken: any;
     
-    // Check if user is admin
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (!adminEmail || decodedToken.email !== adminEmail) {
-      res.status(403).json({ 
-        error: 'Forbidden', 
-        message: 'Admin access required' 
-      });
-      return;
+    try {
+      // First try to verify as ID token
+      decodedToken = await auth.verifyIdToken(token);
+    } catch (idTokenError: any) {
+      // Check if the error indicates it's a custom token
+      if (idTokenError.code === 'auth/argument-error' && 
+          idTokenError.message.includes('custom token')) {
+        try {
+          // If ID token verification fails, try to verify as custom token
+          // Custom tokens can't be verified directly, so we'll decode the JWT
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.decode(token);
+          
+          if (!decoded || typeof decoded !== 'object' || !decoded.uid) {
+            throw new Error('Invalid token format');
+          }
+          
+          // Get user record to verify admin status
+          const userRecord = await auth.getUser(decoded.uid);
+          
+          // Check if user has admin custom claims
+          if (!userRecord.customClaims || !userRecord.customClaims.admin) {
+            res.status(403).json({ 
+              error: 'Forbidden', 
+              message: 'Admin access required' 
+            });
+            return;
+          }
+          
+          decodedToken = {
+            uid: userRecord.uid,
+            email: userRecord.email,
+            admin: true,
+            ...userRecord.customClaims
+          };
+        } catch (customTokenError) {
+          console.error('Custom token verification error:', customTokenError);
+          throw new Error('Invalid custom token');
+        }
+      } else {
+        // Re-throw the original error if it's not a custom token issue
+        throw idTokenError;
+      }
+    }
+    
+    // Check if user is admin (for ID tokens)
+    if (!decodedToken.admin) {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (!adminEmail || decodedToken.email !== adminEmail) {
+        res.status(403).json({ 
+          error: 'Forbidden', 
+          message: 'Admin access required' 
+        });
+        return;
+      }
     }
 
     // Attach user info to request
     req.user = {
+      uid: decodedToken.uid,
       email: decodedToken.email || '',
       ...decodedToken
     };

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Jennies4life API Test</h1>
+    
+    <button onclick="testProducts()">Test Products API</button>
+    <button onclick="testHealth()">Test Health API</button>
+    <button onclick="testPosts()">Test Posts API</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(title, success, data) {
+            const div = document.createElement('div');
+            div.className = `result ${success ? 'success' : 'error'}`;
+            div.innerHTML = `
+                <h3>${title}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testProducts() {
+            try {
+                console.log('Testing products endpoint...');
+                const response = await fetch(`${API_BASE}/products`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addResult('Products API - SUCCESS', true, data);
+            } catch (error) {
+                console.error('Products API error:', error);
+                addResult('Products API - ERROR', false, {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        async function testHealth() {
+            try {
+                console.log('Testing health endpoint...');
+                const response = await fetch(`${API_BASE}/health`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addResult('Health API - SUCCESS', true, data);
+            } catch (error) {
+                console.error('Health API error:', error);
+                addResult('Health API - ERROR', false, {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        async function testPosts() {
+            try {
+                console.log('Testing posts endpoint...');
+                const response = await fetch(`${API_BASE}/posts`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addResult('Posts API - SUCCESS', true, data);
+            } catch (error) {
+                console.error('Posts API error:', error);
+                addResult('Posts API - ERROR', false, {
+                    error: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        // Auto-test on page load
+        window.onload = function() {
+            console.log('Page loaded, running automatic tests...');
+            setTimeout(testHealth, 500);
+            setTimeout(testProducts, 1000);
+            setTimeout(testPosts, 1500);
+        };
+    </script>
+</body>
+</html>
