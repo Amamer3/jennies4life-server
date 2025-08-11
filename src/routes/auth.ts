@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, logout, refresh, verify, profile } from '../controllers/authController';
+import { login, logout, refresh, verify, profile, exchangeToken } from '../controllers/authController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -17,6 +17,13 @@ router.post('/login', login);
  * @access Public
  */
 router.post('/refresh', refresh);
+
+/**
+ * @route POST /api/auth/exchange
+ * @desc Exchange custom token for ID token instructions
+ * @access Public
+ */
+router.post('/exchange', exchangeToken);
 
 /**
  * @route GET /api/auth/verify

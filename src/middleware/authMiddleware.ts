@@ -53,9 +53,13 @@ export const authMiddleware = async (
       // First try to verify as ID token
       decodedToken = await auth.verifyIdToken(token);
     } catch (idTokenError: any) {
-      // Check if the error indicates it's a custom token
-      if (idTokenError.code === 'auth/argument-error' && 
-          idTokenError.message.includes('custom token')) {
+      console.log('ID token verification failed, trying custom token:', idTokenError.code);
+      
+      // Check if the error indicates it's a custom token or expired token
+      if (idTokenError.code === 'auth/argument-error' || 
+          idTokenError.code === 'auth/id-token-expired' ||
+          idTokenError.message.includes('custom token') ||
+          idTokenError.message.includes('was given a custom token')) {
         try {
           // If ID token verification fails, try to verify as custom token
           // Custom tokens can't be verified directly, so we'll decode the JWT
@@ -63,6 +67,7 @@ export const authMiddleware = async (
           const decoded = jwt.decode(token);
           
           if (!decoded || typeof decoded !== 'object' || !decoded.uid) {
+            console.error('Invalid token format:', decoded);
             throw new Error('Invalid token format');
           }
           
@@ -74,6 +79,16 @@ export const authMiddleware = async (
             res.status(403).json({ 
               error: 'Forbidden', 
               message: 'Admin access required' 
+            });
+            return;
+          }
+          
+          // Check token expiration if present
+          if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
+            console.log('Custom token expired');
+            res.status(401).json({ 
+              error: 'Token Expired', 
+              message: 'Token has expired. Please login again.' 
             });
             return;
           }
@@ -90,6 +105,7 @@ export const authMiddleware = async (
         }
       } else {
         // Re-throw the original error if it's not a custom token issue
+        console.error('Token verification failed:', idTokenError);
         throw idTokenError;
       }
     }

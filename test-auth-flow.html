@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .token-display { word-break: break-all; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Authentication Flow Test</h1>
+        
+        <div class="section warning">
+            <h3>⚠️ Current Issue</h3>
+            <p>Your frontend is sending invalid tokens to <code>/api/auth/verify</code>, causing automatic logout.</p>
+            <button onclick="clearStorage()">🧹 Clear Browser Storage</button>
+            <button onclick="checkCurrentTokens()">🔍 Check Stored Tokens</button>
+        </div>
+
+        <div class="section info">
+            <h3>📋 Authentication Steps</h3>
+            <ol>
+                <li><strong>Login</strong> - Get custom token from backend</li>
+                <li><strong>Exchange</strong> - Convert custom token to ID token (Firebase SDK)</li>
+                <li><strong>Store</strong> - Save ID token for authenticated requests</li>
+                <li><strong>Use</strong> - Send ID token in Authorization header</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test Authentication Flow</h3>
+            <div>
+                <input type="email" id="email" placeholder="Admin Email" value="admin@jennies4life.com">
+                <input type="password" id="password" placeholder="Password" value="admin123">
+                <button onclick="testLogin()">1. Test Login</button>
+            </div>
+            <div>
+                <button onclick="testExchange()">2. Test Token Exchange</button>
+                <button onclick="testVerify()">3. Test Verify</button>
+                <button onclick="testLogout()">4. Test Logout</button>
+            </div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let currentCustomToken = null;
+        let currentIdToken = null;
+
+        function addResult(title, type, data) {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `section ${type}`;
+            div.innerHTML = `
+                <h4>${title}</h4>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            resultsDiv.appendChild(div);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            currentCustomToken = null;
+            currentIdToken = null;
+            addResult('🧹 Storage Cleared', 'success', { message: 'All browser storage cleared' });
+        }
+
+        function checkCurrentTokens() {
+            const tokens = {
+                localStorage: {
+                    token: localStorage.getItem('token'),
+                    authToken: localStorage.getItem('authToken'),
+                    idToken: localStorage.getItem('idToken'),
+                    customToken: localStorage.getItem('customToken')
+                },
+                sessionStorage: {
+                    token: sessionStorage.getItem('token'),
+                    authToken: sessionStorage.getItem('authToken'),
+                    idToken: sessionStorage.getItem('idToken'),
+                    customToken: sessionStorage.getItem('customToken')
+                },
+                currentTokens: {
+                    customToken: currentCustomToken ? 'Present' : 'None',
+                    idToken: currentIdToken ? 'Present' : 'None'
+                }
+            };
+            addResult('🔍 Current Tokens', 'info', tokens);
+        }
+
+        async function testLogin() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentCustomToken = data.customToken;
+                    addResult('✅ Login Success', 'success', {
+                        message: 'Custom token received',
+                        tokenPreview: data.customToken ? data.customToken.substring(0, 50) + '...' : 'None'
+                    });
+                } else {
+                    addResult('❌ Login Failed', 'error', data);
+                }
+            } catch (error) {
+                addResult('❌ Login Error', 'error', { error: error.message });
+            }
+        }
+
+        async function testExchange() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/exchange`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customToken: currentCustomToken })
+                });
+
+                const data = await response.json();
+                addResult('📋 Token Exchange Instructions', 'info', data);
+            } catch (error) {
+                addResult('❌ Exchange Error', 'error', { error: error.message });
+            }
+        }
+
+        async function testVerify() {
+            try {
+                // Try with custom token (should fail)
+                if (currentCustomToken) {
+                    const response = await fetch(`${API_BASE}/auth/verify`, {
+                        method: 'GET',
+                        headers: { 
+                            'Authorization': `Bearer ${currentCustomToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        addResult('✅ Verify Success (Custom Token)', 'success', data);
+                    } else {
+                        addResult('❌ Verify Failed (Custom Token)', 'error', {
+                            message: 'Expected failure - custom tokens need to be exchanged for ID tokens',
+                            error: data
+                        });
+                    }
+                } else {
+                    addResult('⚠️ No Token', 'warning', { message: 'Please login first to get a token' });
+                }
+            } catch (error) {
+                addResult('❌ Verify Error', 'error', { error: error.message });
+            }
+        }
+
+        async function testLogout() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentCustomToken = null;
+                    currentIdToken = null;
+                    addResult('✅ Logout Success', 'success', data);
+                } else {
+                    addResult('❌ Logout Failed', 'error', data);
+                }
+            } catch (error) {
+                addResult('❌ Logout Error', 'error', { error: error.message });
+            }
+        }
+
+        // Check for stored tokens on page load
+        window.onload = function() {
+            addResult('🚀 Page Loaded', 'info', { 
+                message: 'Authentication flow test ready',
+                note: 'This demonstrates the proper authentication flow'
+            });
+            checkCurrentTokens();
+        };
+    </script>
+</body>
+</html>
