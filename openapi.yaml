@@ -362,6 +362,201 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/deals/public:
+    get:
+      summary: Get Active Deals
+      description: Retrieve all active deals (public endpoint)
+      tags:
+        - Deals (Public)
+      responses:
+        '200':
+          description: List of active deals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealListResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/deals/public/{id}:
+    get:
+      summary: Get Deal by ID
+      description: Retrieve a single deal by ID (public endpoint)
+      tags:
+        - Deals (Public)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deal ID
+      responses:
+        '200':
+          description: Deal details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealResponse'
+        '404':
+          description: Deal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/deals:
+    get:
+      summary: Get All Deals
+      description: Retrieve all deals (admin only)
+      tags:
+        - Deals (Admin)
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: List of all deals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Create Deal
+      description: Create a new deal (admin only)
+      tags:
+        - Deals (Admin)
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDealRequest'
+      responses:
+        '201':
+          description: Deal created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/deals/{id}:
+    put:
+      summary: Update Deal
+      description: Update an existing deal (admin only)
+      tags:
+        - Deals (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deal ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDealRequest'
+      responses:
+        '200':
+          description: Deal updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DealResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Deal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete Deal
+      description: Delete a deal (admin only)
+      tags:
+        - Deals (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Deal ID
+      responses:
+        '200':
+          description: Deal deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Deal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/categories:
     get:
       summary: Get Categories
@@ -1503,6 +1698,207 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Product'
+
+    Deal:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Deal ID
+        title:
+          type: string
+          description: Deal title
+        description:
+          type: string
+          description: Deal description
+        originalPrice:
+          type: number
+          format: float
+          description: Original price
+        discountedPrice:
+          type: number
+          format: float
+          description: Discounted price
+        discountPercentage:
+          type: number
+          format: float
+          description: Discount percentage
+        affiliateLink:
+          type: string
+          format: uri
+          description: Affiliate link URL
+        imageUrl:
+          type: string
+          format: uri
+          description: Deal image URL
+        category:
+          type: string
+          description: Deal category
+        isActive:
+          type: boolean
+          description: Whether the deal is active
+        startDate:
+          type: string
+          format: date-time
+          description: Deal start date
+        endDate:
+          type: string
+          format: date-time
+          description: Deal end date
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      example:
+        id: "deal123"
+        title: "50% Off Amazing Product"
+        description: "Limited time offer on this amazing product!"
+        originalPrice: 99.99
+        discountedPrice: 49.99
+        discountPercentage: 50
+        affiliateLink: "https://affiliate.com/deal/123"
+        imageUrl: "https://example.com/deal-image.jpg"
+        category: "Electronics"
+        isActive: true
+        startDate: "2024-01-15T00:00:00Z"
+        endDate: "2024-01-31T23:59:59Z"
+        createdAt: "2024-01-15T10:30:00Z"
+        updatedAt: "2024-01-15T10:30:00Z"
+
+    CreateDealRequest:
+      type: object
+      required:
+        - title
+        - description
+        - originalPrice
+        - discountedPrice
+        - affiliateLink
+        - imageUrl
+        - category
+        - startDate
+        - endDate
+      properties:
+        title:
+          type: string
+          description: Deal title
+        description:
+          type: string
+          description: Deal description
+        originalPrice:
+          type: number
+          format: float
+          description: Original price
+        discountedPrice:
+          type: number
+          format: float
+          description: Discounted price
+        affiliateLink:
+          type: string
+          format: uri
+          description: Affiliate link URL
+        imageUrl:
+          type: string
+          format: uri
+          description: Deal image URL
+        category:
+          type: string
+          description: Deal category
+        isActive:
+          type: boolean
+          default: true
+          description: Whether the deal is active
+        startDate:
+          type: string
+          format: date-time
+          description: Deal start date
+        endDate:
+          type: string
+          format: date-time
+          description: Deal end date
+      example:
+        title: "50% Off Amazing Product"
+        description: "Limited time offer on this amazing product!"
+        originalPrice: 99.99
+        discountedPrice: 49.99
+        affiliateLink: "https://affiliate.com/deal/123"
+        imageUrl: "https://example.com/deal-image.jpg"
+        category: "Electronics"
+        isActive: true
+        startDate: "2024-01-15T00:00:00Z"
+        endDate: "2024-01-31T23:59:59Z"
+
+    UpdateDealRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Deal title
+        description:
+          type: string
+          description: Deal description
+        originalPrice:
+          type: number
+          format: float
+          description: Original price
+        discountedPrice:
+          type: number
+          format: float
+          description: Discounted price
+        affiliateLink:
+          type: string
+          format: uri
+          description: Affiliate link URL
+        imageUrl:
+          type: string
+          format: uri
+          description: Deal image URL
+        category:
+          type: string
+          description: Deal category
+        isActive:
+          type: boolean
+          description: Whether the deal is active
+        startDate:
+          type: string
+          format: date-time
+          description: Deal start date
+        endDate:
+          type: string
+          format: date-time
+          description: Deal end date
+      example:
+        title: "Updated Deal Title"
+        isActive: false
+
+    DealResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Deal'
+        message:
+          type: string
+          example: "Deal created successfully"
+
+    DealListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deal'
+        message:
+          type: string
+          example: "Found 5 active deals"
 
     PostResponse:
       type: object
