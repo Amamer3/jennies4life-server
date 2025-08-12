@@ -6,6 +6,8 @@ import postsRoutes from './posts';
 import authRoutes from './auth';
 import dashboardRoutes from './dashboard';
 import redirectRoutes from './redirect';
+import adminRoutes from './admin';
+import categoriesRoutes from './categories';
 
 const router = Router();
 
@@ -13,8 +15,10 @@ const router = Router();
 router.use('/auth', authRoutes);
 router.use('/products', productsRoutes);
 router.use('/posts', postsRoutes);
+router.use('/categories', categoriesRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/redirect', redirectRoutes);
+router.use('/admin', adminRoutes);
 
 // API Documentation endpoint with Scalar
 router.get('/docs', (req, res) => {

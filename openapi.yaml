@@ -362,6 +362,270 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/categories:
+    get:
+      summary: Get Categories
+      description: Retrieve all categories with product counts (public endpoint)
+      tags:
+        - Categories (Public)
+      responses:
+        '200':
+          description: List of categories with product counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Create Category
+      description: Create a new category (admin only)
+      tags:
+        - Categories (Admin)
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Category already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/categories/{slug}:
+    get:
+      summary: Get Category by Slug
+      description: Retrieve a single category by slug with product count (public endpoint)
+      tags:
+        - Categories (Public)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Category slug
+      responses:
+        '200':
+          description: Category details with product count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/categories/{slug}/products:
+    get:
+      summary: Get Products by Category
+      description: Retrieve all published products in a specific category (public endpoint)
+      tags:
+        - Categories (Public)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Category slug
+      responses:
+        '200':
+          description: List of products in the category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/categories/{id}:
+    put:
+      summary: Update Category
+      description: Update an existing category (admin only)
+      tags:
+        - Categories (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Category ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: Category updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Category slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete Category
+      description: Delete a category (admin only). Cannot delete if category has products.
+      tags:
+        - Categories (Admin)
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Category ID
+      responses:
+        '200':
+          description: Category deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Cannot delete category with existing products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/categories/admin/all:
+    get:
+      summary: Get All Categories (Admin)
+      description: Retrieve all categories including drafts (admin only)
+      tags:
+        - Categories (Admin)
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: List of all categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/posts:
     get:
       summary: Get Published Posts
@@ -594,6 +858,263 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PostListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/users:
+    get:
+      summary: List Admin Users
+      description: Retrieve all admin users (admin only)
+      tags:
+        - Admin Management
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: List of admin users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Create Admin User
+      description: Create a new admin user (admin only)
+      tags:
+        - Admin Management
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAdminRequest'
+      responses:
+        '201':
+          description: Admin user created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/users/{uid}:
+    get:
+      summary: Get Admin User
+      description: Retrieve specific admin user by UID (admin only)
+      tags:
+        - Admin Management
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: Admin user UID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Admin user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Admin user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    put:
+      summary: Update Admin User
+      description: Update admin user details (admin only)
+      tags:
+        - Admin Management
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: Admin user UID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAdminRequest'
+      responses:
+        '200':
+          description: Admin user updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Admin user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Delete Admin User
+      description: Delete admin user (admin only)
+      tags:
+        - Admin Management
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          description: Admin user UID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Admin user deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Admin user deleted successfully"
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: "firebase-uid-here"
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T12:00:00.000Z"
+        '400':
+          description: Validation error (cannot delete own account)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Admin user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/admin/stats:
+    get:
+      summary: Get Admin Statistics
+      description: Retrieve dashboard access statistics (admin only)
+      tags:
+        - Admin Management
+      security:
+        - FirebaseAuth: []
+      responses:
+        '200':
+          description: Admin statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStatsResponse'
         '401':
           description: Unauthorized
           content:
@@ -851,6 +1372,114 @@ components:
       example:
         title: "Updated Post Title"
         status: "published"
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Category ID
+        name:
+          type: string
+          description: Category name
+        slug:
+          type: string
+          description: URL-friendly slug
+        description:
+          type: string
+          description: Category description
+        status:
+          type: string
+          enum: [draft, published]
+          description: Category status
+        productCount:
+          type: integer
+          description: Number of products in this category
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      example:
+        id: "cat123"
+        name: "Electronics"
+        slug: "electronics"
+        description: "Electronic devices and gadgets"
+        status: "published"
+        productCount: 15
+        createdAt: "2024-01-15T10:30:00Z"
+        updatedAt: "2024-01-15T10:30:00Z"
+
+    CreateCategoryRequest:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          description: Category name
+        slug:
+          type: string
+          description: Custom slug (optional, auto-generated if not provided)
+        description:
+          type: string
+          description: Category description
+        status:
+          type: string
+          enum: [draft, published]
+          default: draft
+          description: Category status
+      example:
+        name: "Electronics"
+        description: "Electronic devices and gadgets"
+        status: "published"
+
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Category name
+        slug:
+          type: string
+          description: URL-friendly slug
+        description:
+          type: string
+          description: Category description
+        status:
+          type: string
+          enum: [draft, published]
+          description: Category status
+      example:
+        name: "Updated Electronics"
+        status: "published"
+
+    CategoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Category'
+        message:
+          type: string
+          example: "Category created successfully"
+
+    CategoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
 
     ProductResponse:
       type: object
@@ -1163,6 +1792,157 @@ components:
               items:
                 $ref: '#/components/schemas/BlogPost'
 
+    # Admin Management Schemas
+    CreateAdminRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Admin email address
+          example: "newadmin@jennies4life.com"
+        password:
+          type: string
+          minLength: 8
+          description: Admin password
+          example: "securePassword123"
+        displayName:
+          type: string
+          description: Display name for the admin user
+          example: "New Admin User"
+
+    UpdateAdminRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          description: Updated display name
+          example: "Updated Admin Name"
+        isActive:
+          type: boolean
+          description: Whether the admin account is active
+          example: true
+
+    AdminUser:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: Firebase user ID
+          example: "firebase-uid-here"
+        email:
+          type: string
+          format: email
+          description: Admin email address
+          example: "admin@jennies4life.com"
+        displayName:
+          type: string
+          description: Admin display name
+          example: "Admin User"
+        role:
+          type: string
+          description: User role
+          example: "admin"
+        permissions:
+          type: array
+          items:
+            type: string
+          description: Admin permissions
+          example: ["read", "write", "delete"]
+        isActive:
+          type: boolean
+          description: Whether the admin account is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-15T10:30:00.000Z"
+
+    AdminListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Admin users retrieved successfully"
+        data:
+          type: object
+          properties:
+            admins:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminUser'
+            total:
+              type: integer
+              description: Total number of admin users
+              example: 5
+
+    AdminResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Admin user created successfully"
+        data:
+          $ref: '#/components/schemas/AdminUser'
+
+    AdminStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Dashboard statistics retrieved successfully"
+        data:
+          type: object
+          properties:
+            totalAdmins:
+              type: integer
+              description: Total number of admin users
+              example: 5
+            activeAdmins:
+              type: integer
+              description: Number of active admin users
+              example: 4
+            inactiveAdmins:
+              type: integer
+              description: Number of inactive admin users
+              example: 1
+            recentAdmins:
+              type: array
+              items:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                    example: "recent-admin-1"
+                  email:
+                    type: string
+                    example: "recent1@jennies4life.com"
+                  displayName:
+                    type: string
+                    example: "Recent Admin"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00.000Z"
+
 tags:
   - name: General
     description: General API endpoints
@@ -1178,3 +1958,5 @@ tags:
     description: Admin blog post endpoints (authentication required)
   - name: Dashboard (Admin)
     description: Admin dashboard endpoints (authentication required)
+  - name: Admin Management
+    description: Admin user management endpoints (authentication required)
