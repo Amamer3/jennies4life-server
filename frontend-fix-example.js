@@ -57,8 +57,12 @@ class AuthManager {
             const data = await response.json();
 
             if (response.ok) {
-                // Store the custom token temporarily
-                const customToken = data.customToken;
+                // FIXED: Extract custom token from correct path (data.data.customToken)
+                const customToken = data.data?.customToken;
+                
+                if (!customToken) {
+                    throw new Error('No custom token received from backend');
+                }
                 
                 // TODO: Exchange custom token for ID token using Firebase SDK
                 // For now, we'll store the custom token (this will cause auth errors)

@@ -8,6 +8,7 @@ import dashboardRoutes from './dashboard';
 import redirectRoutes from './redirect';
 import adminRoutes from './admin';
 import categoriesRoutes from './categories';
+import dealsRoutes from './deals';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/auth', authRoutes);
 router.use('/products', productsRoutes);
 router.use('/posts', postsRoutes);
 router.use('/categories', categoriesRoutes);
+router.use('/deals', dealsRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/redirect', redirectRoutes);
 router.use('/admin', adminRoutes);
