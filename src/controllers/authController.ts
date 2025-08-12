@@ -84,7 +84,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
       res.status(200).json({
         success: true,
-        message: 'Admin login successful',
+        message: 'Admin login successful. Use the custom token with Firebase client SDK to get an ID token.',
         data: {
           customToken,
           user: {
@@ -92,6 +92,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             email: userRecord.email,
             displayName: userRecord.displayName,
             role: 'admin'
+          },
+          instructions: {
+            message: 'Exchange this custom token for an ID token using Firebase client SDK',
+            clientSideCode: 'firebase.auth().signInWithCustomToken(customToken).then(userCredential => userCredential.user.getIdToken())'
           }
         }
       });
@@ -179,48 +183,23 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       let decodedToken: any;
       
       try {
-        // First try to verify as ID token
+        // Try to verify as ID token
         decodedToken = await auth.verifyIdToken(refreshToken);
       } catch (idTokenError: any) {
-        // Check if the error indicates it's a custom token
-        if (idTokenError.code === 'auth/argument-error' && 
-            (idTokenError.message.includes('custom token') || idTokenError.message.includes('was given a custom token'))) {
-          try {
-            // If ID token verification fails, try to decode as custom token
-            const jwt = require('jsonwebtoken');
-            const decoded = jwt.decode(refreshToken);
-            
-            if (!decoded || typeof decoded !== 'object' || !decoded.uid) {
-              throw new Error('Invalid token format');
-            }
-            
-            // Get user record to verify admin status
-            const userRecord = await auth.getUser(decoded.uid);
-            
-            // Check if user has admin custom claims
-            if (!userRecord.customClaims || !userRecord.customClaims.admin) {
-              res.status(403).json({
-                success: false,
-                error: 'Forbidden',
-                message: 'Admin privileges required'
-              });
-              return;
-            }
-            
-            decodedToken = {
-              uid: userRecord.uid,
-              email: userRecord.email,
-              admin: true,
-              ...userRecord.customClaims
-            };
-          } catch (customTokenError) {
-            console.error('Custom token verification error:', customTokenError);
-            throw new Error('Invalid custom token');
-          }
-        } else {
-          // Re-throw the original error if it's not a custom token issue
-          throw idTokenError;
+        console.error('Token refresh error:', idTokenError);
+        
+        // If it's an argument error, it's likely a custom token
+        if (idTokenError.code === 'auth/argument-error') {
+          res.status(400).json({
+            success: false,
+            error: 'Invalid Token Type',
+            message: 'Cannot refresh custom tokens. Please use Firebase client SDK to sign in with the custom token and get a new ID token.'
+          });
+          return;
         }
+        
+        // Re-throw other errors to be handled below
+        throw idTokenError;
       }
       
       // Check if user has admin privileges
@@ -241,13 +220,17 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
       res.status(200).json({
         success: true,
-        message: 'Token refreshed successfully',
+        message: 'Token refreshed successfully. Use the new custom token with Firebase client SDK to get an ID token.',
         data: {
           customToken: newCustomToken,
           user: {
             uid: decodedToken.uid,
             email: decodedToken.email,
             role: 'admin'
+          },
+          instructions: {
+            message: 'Exchange this custom token for an ID token using Firebase client SDK',
+            clientSideCode: 'firebase.auth().signInWithCustomToken(customToken).then(userCredential => userCredential.user.getIdToken())'
           }
         }
       });

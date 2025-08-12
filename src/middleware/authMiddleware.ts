@@ -50,64 +50,32 @@ export const authMiddleware = async (
     let decodedToken: any;
     
     try {
-      // First try to verify as ID token
+      // Try to verify as ID token first
       decodedToken = await auth.verifyIdToken(token);
     } catch (idTokenError: any) {
-      console.log('ID token verification failed, trying custom token:', idTokenError.code);
+      console.log('ID token verification failed:', idTokenError.code);
       
-      // Check if the error indicates it's a custom token or expired token
-      if (idTokenError.code === 'auth/argument-error' || 
-          idTokenError.code === 'auth/id-token-expired' ||
-          idTokenError.message.includes('custom token') ||
-          idTokenError.message.includes('was given a custom token')) {
-        try {
-          // If ID token verification fails, try to verify as custom token
-          // Custom tokens can't be verified directly, so we'll decode the JWT
-          const jwt = require('jsonwebtoken');
-          const decoded = jwt.decode(token);
-          
-          if (!decoded || typeof decoded !== 'object' || !decoded.uid) {
-            console.error('Invalid token format:', decoded);
-            throw new Error('Invalid token format');
-          }
-          
-          // Get user record to verify admin status
-          const userRecord = await auth.getUser(decoded.uid);
-          
-          // Check if user has admin custom claims
-          if (!userRecord.customClaims || !userRecord.customClaims.admin) {
-            res.status(403).json({ 
-              error: 'Forbidden', 
-              message: 'Admin access required' 
-            });
-            return;
-          }
-          
-          // Check token expiration if present
-          if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
-            console.log('Custom token expired');
-            res.status(401).json({ 
-              error: 'Token Expired', 
-              message: 'Token has expired. Please login again.' 
-            });
-            return;
-          }
-          
-          decodedToken = {
-            uid: userRecord.uid,
-            email: userRecord.email,
-            admin: true,
-            ...userRecord.customClaims
-          };
-        } catch (customTokenError) {
-          console.error('Custom token verification error:', customTokenError);
-          throw new Error('Invalid custom token');
-        }
-      } else {
-        // Re-throw the original error if it's not a custom token issue
-        console.error('Token verification failed:', idTokenError);
-        throw idTokenError;
+      // If it's an argument error, it might be a custom token
+      if (idTokenError.code === 'auth/argument-error') {
+        res.status(401).json({ 
+          error: 'Invalid Token Type', 
+          message: 'Custom tokens must be exchanged for ID tokens on the client side. Please use Firebase client SDK to sign in with the custom token first.' 
+        });
+        return;
       }
+      
+      // Handle other token errors
+      if (idTokenError.code === 'auth/id-token-expired') {
+        res.status(401).json({ 
+          error: 'Token Expired', 
+          message: 'Token has expired. Please refresh your token.' 
+        });
+        return;
+      }
+      
+      // Re-throw other errors
+      console.error('Token verification failed:', idTokenError);
+      throw idTokenError;
     }
     
     // Check if user is admin (for ID tokens)
