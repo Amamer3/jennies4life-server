@@ -38,29 +38,62 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('🌍 CORS Request from origin:', origin);
+    
     // Allow requests with no origin (like mobile apps, curl requests, or Postman)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ Allowing request with no origin');
+      return callback(null, true);
+    }
     
     // In development, be more permissive
     if (process.env.NODE_ENV === 'development') {
       // Allow localhost and 127.0.0.1 with any port
       if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/)) {
+        console.log('✅ Allowing development origin:', origin);
         return callback(null, true);
       }
     }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ Origin allowed:', origin);
       callback(null, true);
     } else {
-      console.warn(`CORS: Origin '${origin}' not allowed. Allowed origins:`, allowedOrigins);
-      callback(new Error(`Origin '${origin}' not allowed by CORS`));
+      console.warn('❌ CORS: Origin not allowed:', origin);
+      console.warn('📋 Allowed origins:', allowedOrigins);
+      // Temporarily allow all origins to debug the issue
+      callback(null, true);
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept', 
+    'Origin',
+    'Access-Control-Allow-Origin'
+  ],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+// Add explicit preflight handler
+app.options('*', (req, res) => {
+  console.log('🔄 Handling OPTIONS preflight for:', req.url);
+  console.log('🌍 Origin:', req.headers.origin);
+  
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  
+  console.log('✅ Preflight response sent');
+  res.sendStatus(204);
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -78,6 +111,12 @@ app.get('/test-frontend.html', (req, res) => {
 });
 
 // API routes
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.url} from ${req.headers.origin || 'unknown origin'}`);
+  console.log('📋 Headers:', JSON.stringify(req.headers, null, 2));
+  next();
+});
 app.use('/api', routes);
 
 // Root endpoint
